@@ -5,17 +5,18 @@ from keras.datasets import mnist
 
 image = x_train[:1000].reshape(1000,28*28) / 255
 
+np.random.seed(1)
 
 def relu(x):
-    return np.maximum(0, x)
+    return (x > 0) * x
 
 def drelu(x):
     return (x > 0).astype(float)
 
-weights_0_1 = 0.2*np.random.random((784,128)) - 0.1
-weights_1_2 = 0.2*np.random.random((128,10)) - 0.1
+weights_0_1 = 0.2*np.random.random((784,40)) - 0.1
+weights_1_2 = 0.2*np.random.random((40,10)) - 0.1
 
-alpha = 0.01
+alpha = 0.005
 
 def one_hot(y, num_classes=10):
     res = np.zeros((y.size, num_classes))
@@ -38,5 +39,4 @@ for e in range(350):
 
         weights_1_2 -= alpha * layer_1.T.dot(layer_2_delta)
         weights_0_1 -= alpha * layer_0.T.dot(layer_1_delta)
-
-    print('Error:', error)
+    sys.stdout.write("\rError: " + str(float(error/len(image))))
