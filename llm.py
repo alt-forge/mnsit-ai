@@ -29,20 +29,23 @@ labels = one_hot(y_train[:1000], 10)
 test_image = x_test.reshape(len(x_test),28*28) / 255
 test_labels = one_hot(y_test, 10)
 
+batch_size = 100
+
 for e in range(300):
     error = 0
     correct = 0
-    for i in range(len(image)):
-        layer_0 = image[i:i+1]
+    for i in range(int(len(image)/batch_size)):
+        batch_start, batch_end = (i*batch_size, (i+1)*batch_size)
+        layer_0 = image[batch_start:batch_end]
         layer_1 = relu(layer_0.dot(weights_0_1))
         dropout_mask = np.random.randint(2, size=layer_1.shape)
         layer_1 *= dropout_mask*2
         layer_2 = layer_1.dot(weights_1_2)
 
-        error += np.sum((labels[i:i+1] - layer_2)**2)
-        correct += int(np.argmax(layer_2) == np.argmax(labels[i:i+1]))
+        error += np.sum((labels[batch_start:batch_end] - layer_2)**2)
+        correct += int(np.argmax(layer_2) == np.argmax(labels[batch_start:batch_end]))
 
-        layer_2_delta = layer_2 - labels[i:i+1]
+        layer_2_delta = layer_2 - labels[batch_start:batch_end]
         layer_1_delta = layer_2_delta.dot(weights_1_2.T) * drelu(layer_1)
 
         layer_1_delta *= dropout_mask
