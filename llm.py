@@ -12,6 +12,15 @@ def relu(x):
 def drelu(x):
     return (x > 0).astype(float)
 
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+def dsigmoid(x):
+    return sigmoid(x) * (1 - sigmoid(x))
+def softmax(x):
+    temp = np.exp(x)
+    return temp / np.sum(temp, axis=1, keepdims=True)
+
 weights_0_1 = 0.2*np.random.random((784,100)) - 0.1
 weights_1_2 = 0.2*np.random.random((100,10)) - 0.1
 
@@ -37,16 +46,16 @@ for e in range(300):
     for i in range(int(len(image)/batch_size)):
         batch_start, batch_end = (i*batch_size, (i+1)*batch_size)
         layer_0 = image[batch_start:batch_end]
-        layer_1 = relu(layer_0.dot(weights_0_1))
+        layer_1 = sigmoid(layer_0.dot(weights_0_1))
         dropout_mask = np.random.randint(2, size=layer_1.shape)
         layer_1 *= dropout_mask*2
-        layer_2 = layer_1.dot(weights_1_2)
+        layer_2 = softmax(layer_1.dot(weights_1_2))
 
         error += np.sum((labels[batch_start:batch_end] - layer_2)**2)
         correct += int(np.argmax(layer_2) == np.argmax(labels[batch_start:batch_end]))
 
         layer_2_delta = layer_2 - labels[batch_start:batch_end]
-        layer_1_delta = layer_2_delta.dot(weights_1_2.T) * drelu(layer_1)
+        layer_1_delta = layer_2_delta.dot(weights_1_2.T) * dsigmoid(layer_1)
 
         layer_1_delta *= dropout_mask
 
@@ -57,8 +66,8 @@ for e in range(300):
         test_correct = 0
         for i in range(len(test_image)):
             layer_0 = test_image[i:i+1]
-            layer_1 = relu(layer_0.dot(weights_0_1))
-            layer_2 = layer_1.dot(weights_1_2)
+            layer_1 = sigmoid(layer_0.dot(weights_0_1))
+            layer_2 = softmax(layer_1.dot(weights_1_2))
             test_correct += int(np.argmax(layer_2) == np.argmax(test_labels[i:i+1]))
             test_error += np.sum((test_labels[i:i+1] - layer_2)**2)
         sys.stdout.write("\n" + \
